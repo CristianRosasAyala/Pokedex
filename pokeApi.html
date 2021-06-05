@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokeAPI</title>
+    <style>
+        a{
+            margin: 1rem;
+        }
+        .loading{
+            display: block;
+            margin: auto;
+        }
+        #pokemons-container{
+            display: flex;
+            flex-flow: row wrap;
+            align-content: space-between;
+            justify-content:center;
+        }
+        figure{
+            flex: 0 0 auto;
+            height: 10rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>PokeAPI</h1>
+    <nav class="navbar">
+
+    </nav>
+    <main id="pokemons-container"></main>
+    
+    <script>
+        const d = document, 
+            $pokemonsContainer = d.getElementById("pokemons-container"),
+            $navbar = d.querySelector(".navbar");
+
+        
+        let pokeApiUrl = "https://pokeapi.co/api/v2/pokemon";
+        
+        const getPokemon = async (pokeApiUrl) =>{
+            try {
+                let resp = await fetch(pokeApiUrl);
+                let json = await resp.json();
+                let $template = "";
+                let leftArrow, rightArrow;
+                let loading = `<img src="audio.svg" alt="loading" class="loading">`
+                $pokemonsContainer.innerHTML = loading
+                
+                console.log(json)
+                for (let index = 0; index < json.results.length; index++) {
+                    try {
+                        let respUrl = await fetch(json.results[index].url);
+                        let pokemon = await respUrl.json();
+                        //console.log(pokemon)
+                        $template += 
+                        `<figure>
+                            <img src="${pokemon.sprites.front_shiny}">
+                            <figcaption>${pokemon.name}<figcaption>
+                        </figure>`;
+                        //console.log($template)
+                    } catch (err) {
+                        let message = err.statusError || "Ocurrió un error en pokes"
+                        $pokemonsContainer.innerHTML = `${message}, ${err}`
+                    }
+                }
+                $pokemonsContainer.innerHTML = $template;
+                
+                leftArrow =  json.previous ? leftArrow = `<a href="${json.previous}">👈🏿<a/>` : "";
+                
+                rightArrow = json.next ? rightArrow = `<a href="${json.next}">👉🏿<a/>` : "";
+
+                $navbar.innerHTML = `${leftArrow} - ${rightArrow}`
+            } catch (error) {
+                let message = error.statusError || "Ocurrió un error"
+                $pokemonsContainer.innerHTML = `${message}, ${error}`
+            }
+
+        }
+        d.addEventListener("DOMContentLoaded", getPokemon(pokeApiUrl));
+        d.addEventListener("click", e =>{
+            e.preventDefault()
+            if (e.target.matches("a")) {
+                console.log(e.target.getAttribute("href"))
+                getPokemon(e.target.getAttribute("href"))
+            }
+            
+        })
+
+    </script>
+</body>
+</html>
